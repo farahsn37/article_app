@@ -1,0 +1,160 @@
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #f7f8fc;
+    color: #20243a;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+}
+
+a {
+    color: #5145cd;
+    text-decoration: none;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 8%;
+    background: white;
+    border-bottom: 1px solid #e8e9f0;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: bold;
+    color: #20243a;
+}
+
+.container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 30px 24px 70px;
+}
+
+.hero {
+    padding: 55px 0;
+}
+
+.eyebrow, .category {
+    color: #5145cd;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.hero h1 {
+    margin: 10px 0;
+    font-size: clamp(32px, 5vw, 52px);
+    line-height: 1.15;
+}
+
+.hero p {
+    color: #686d80;
+}
+
+.search-form {
+    display: flex;
+    gap: 10px;
+    max-width: 560px;
+    margin-top: 25px;
+}
+
+.search-form input {
+    flex: 1;
+    min-width: 0;
+    padding: 13px;
+    border: 1px solid #dddfea;
+    border-radius: 8px;
+}
+
+button {
+    padding: 13px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #5145cd;
+    color: white;
+    cursor: pointer;
+}
+
+.section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+}
+
+.section-heading span, .author {
+    color: #777c8f;
+    font-size: 14px;
+}
+
+.article-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 22px;
+}
+
+.article-card {
+    padding: 25px;
+    background: white;
+    border: 1px solid #ececf3;
+    border-radius: 14px;
+    box-shadow: 0 5px 20px #20243a08;
+}
+
+.article-card h3 {
+    font-size: 21px;
+    line-height: 1.35;
+}
+
+.article-card p {
+    color: #686d80;
+}
+
+.card-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid #eeeef4;
+    font-size: 13px;
+}
+
+.reading-container {
+    max-width: 760px;
+    margin: 60px auto;
+    padding: 24px;
+}
+
+.reading-container h1 {
+    font-size: clamp(32px, 5vw, 46px);
+    line-height: 1.2;
+}
+
+.article-content {
+    margin: 35px 0;
+    font-size: 18px;
+    white-space: pre-line;
+}
+
+@media (max-width: 600px) {
+    .navbar {
+        padding: 16px 5%;
+    }
+
+    .container {
+        padding: 20px 18px;
+    }
+
+    .search-form {
+        flex-direction: column;
+    }
+}

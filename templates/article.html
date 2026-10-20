@@ -1,0 +1,27 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ article.title }} | Article Hub</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="navbar">
+        <a class="logo" href="/">Article Hub</a>
+        <a href="/">← Back to articles</a>
+    </header>
+
+    <main class="reading-container">
+        <span class="category">{{ article.category }}</span>
+        <h1>{{ article.title }}</h1>
+        <p class="author">Written by {{ article.author }}</p>
+        <div class="article-content">
+            <p>{{ article.content }}</p>
+        </div>
+        <a href="/" class="back-link">Explore more articles →</a>
+    </main>
+</body>
+</html>

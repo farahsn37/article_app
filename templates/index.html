@@ -1,0 +1,61 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Article Hub</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="navbar">
+        <a class="logo" href="/">Article Hub</a>
+        <span>Discover something new</span>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <p class="eyebrow">YOUR DAILY READING SPACE</p>
+            <h1>Ideas worth exploring.</h1>
+            <p>Discover articles about technology, education, and more.</p>
+
+            <form action="/" method="GET" class="search-form">
+                <input
+                    type="search"
+                    name="q"
+                    placeholder="Search articles..."
+                    value="{{ search_query }}"
+                >
+                <button type="submit">Search</button>
+            </form>
+        </section>
+
+        <section>
+            <div class="section-heading">
+                <h2>Latest articles</h2>
+                <span>{{ articles|length }} articles</span>
+            </div>
+
+            <div class="article-grid">
+                {% for article in articles %}
+                    <article class="article-card">
+                        <span class="category">{{ article.category }}</span>
+                        <h3>{{ article.title }}</h3>
+                        <p>{{ article.summary }}</p>
+                        <div class="card-footer">
+                            <span>By {{ article.author }}</span>
+                            <a href="{{ url_for(
+                                'article_detail',
+                                article_id=article.id
+                            ) }}">Read article →</a>
+                        </div>
+                    </article>
+                {% else %}
+                    <p>No articles found. Try another keyword.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+</body>
+</html>
