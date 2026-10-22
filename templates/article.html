@@ -11,17 +11,53 @@
 <body>
     <header class="navbar">
         <a class="logo" href="/">Article Hub</a>
-        <a href="/">← Back to articles</a>
+        <a href="{{ url_for(
+            'home',
+            page=page,
+            category=category,
+            q=search_query
+        ) }}" class="back-link">
+            ← Back to articles
+        </a>
     </header>
 
     <main class="reading-container">
         <span class="category">{{ article.category }}</span>
+
         <h1>{{ article.title }}</h1>
-        <p class="author">Written by {{ article.author }}</p>
-        <div class="article-content">
-            <p>{{ article.content }}</p>
-        </div>
-        <a href="/" class="back-link">Explore more articles →</a>
+
+        <p class="author">
+            By {{ article.author }} · {{ article.source }}
+        </p>
+
+        {% if article.published_at %}
+            <p class="article-meta">
+                Published: {{ article.published_at }}
+            </p>
+        {% endif %}
+
+        {% if article.image %}
+            <img
+                class="article-detail-image"
+                src="{{ article.image }}"
+                alt="Image for {{ article.title }}"
+                referrerpolicy="no-referrer"
+            >
+        {% endif %}
+
+        <p class="summary">{{ article.summary }}</p>
+
+        <div class="article-content">{{ article.content }}</div>
+
+        <p>
+            <a href="{{ article.url }}"
+               target="_blank"
+               rel="noopener noreferrer">
+                Read the original article on {{ article.source }} ↗
+            </a>
+        </p>
+
+        <a href="/" class="back-link">← Explore more news</a>
     </main>
 </body>
 </html>

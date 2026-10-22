@@ -4,31 +4,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Article Hub</title>
+    <title>Article Hub | Latest News</title>
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        referrerpolicy="no-referrer"
+    >
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
     <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <header class="navbar">
         <a class="logo" href="/">Article Hub</a>
-        <span>Discover something new</span>
+        <span>News from around the world</span>
     </header>
 
     <main class="container">
         <section class="hero">
-            <p class="eyebrow">YOUR DAILY READING SPACE</p>
+            <p class="eyebrow">YOUR DAILY NEWS DIGEST</p>
             <h1>Ideas worth exploring.</h1>
-            <p>Discover articles about technology, education, and more.</p>
+            <p>Discover the latest stories across different categories.</p>
 
             <form action="/" method="GET" class="search-form">
+                <input type="hidden" name="category" value="{{ category }}">
                 <input
                     type="search"
                     name="q"
-                    placeholder="Search articles..."
+                    placeholder="Search the news..."
                     value="{{ search_query }}"
+                    maxlength="100"
                 >
                 <button type="submit">Search</button>
             </form>
+        </section>
+
+        <section>
+            <div class="section-heading">
+                <h2>Explore categories</h2>
+            </div>
+
+            <nav class="category-nav">
+                {% for item in categories %}
+                    <a
+                        class="category-link {% if item == category %}active{% endif %}"
+                        href="{{ url_for('home', category=item, q=search_query) }}"
+                    >
+                        {{ item|title }}
+                    </a>
+                {% endfor %}
+            </nav>
         </section>
 
         <section>
@@ -37,25 +65,144 @@
                 <span>{{ articles|length }} articles</span>
             </div>
 
-            <div class="article-grid">
-                {% for article in articles %}
-                    <article class="article-card">
-                        <span class="category">{{ article.category }}</span>
-                        <h3>{{ article.title }}</h3>
-                        <p>{{ article.summary }}</p>
-                        <div class="card-footer">
-                            <span>By {{ article.author }}</span>
-                            <a href="{{ url_for(
-                                'article_detail',
-                                article_id=article.id
-                            ) }}">Read article →</a>
-                        </div>
-                    </article>
-                {% else %}
-                    <p>No articles found. Try another keyword.</p>
-                {% endfor %}
-            </div>
+            {% if error %}
+                <div class="notice">
+                    <strong>Unable to load news</strong>
+                    <p>{{ error }}</p>
+                    <a href="{{ url_for('home', category=category, q=search_query) }}">
+                        Try again
+                    </a>
+                </div>
+            {% elif not articles %}
+                <div class="notice">
+                    <p>No accessible articles were found.</p>
+                    <p>Try another keyword or category.</p>
+                </div>
+            {% else %}
+                <div class="article-grid">
+                    {% for article in articles %}
+                        <article class="article-card">
+                            <span class="category">
+                                {{ article.category }}
+                            </span>
+
+                            <h3>{{ article.title }}</h3>
+
+                            <p class="article-meta">
+                                {{ article.source }} ·
+                                {{ article.author }}
+                            </p>
+
+                            {% if article.image %}
+                                <img
+                                    class="article-image"
+                                    src="{{ article.image }}"
+                                    alt="Image for {{ article.title }}"
+                                    loading="lazy"
+                                    referrerpolicy="no-referrer"
+                                >
+                            {% else %}
+                                <div class="image-placeholder">
+                                    Image unavailable
+                                </div>
+                            {% endif %}
+
+                            <p class="summary">
+                                {{ article.summary }}
+                            </p>
+
+                            <p class="preview">
+                                {{ article.preview }}
+                            </p>
+
+                            <div class="card-footer">
+                                <a href="{{ url_for(
+                                    'article_detail',
+                                    article_id=article.id,
+                                    category=category,
+                                    q=search_query,
+                                    page=page
+                                ) }}">
+                                    Read article →
+                                </a>
+                                <a href="{{ article.url }}"
+                                   target="_blank"
+                                   rel="noopener noreferrer">
+                                    Original source ↗
+                                </a>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if total_pages > 1 %}
+                <nav class="pagination" aria-label="News article pages">
+
+                    {% if has_previous %}
+                        <a
+                            class="pagination-button"
+                            href="{{ url_for(
+                                'home',
+                                page=page - 1,
+                                category=category,
+                                q=search_query
+                            ) }}"
+                            aria-label="Previous page"
+                        >
+                            <i class="fa-solid fa-chevron-left"
+                              aria-hidden="true"></i>
+                            <span>Previous</span>
+                        </a>
+                    {% else %}
+                        <span class="pagination-button disabled"
+                              aria-disabled="true">
+                            <i class="fa-solid fa-chevron-left"
+                              aria-hidden="true"></i>
+                            <span>Previous</span>
+                        </span>
+                    {% endif %}
+
+                    <span class="pagination-info">
+                        Page {{ page }} of {{ total_pages }}
+                    </span>
+
+                    {% if has_next %}
+                        <a
+                            class="pagination-button"
+                            href="{{ url_for(
+                                'home',
+                                page=page + 1,
+                                category=category,
+                                q=search_query
+                            ) }}"
+                            aria-label="Next page"
+                        >
+                            <span>Next</span>
+                            <i class="fa-solid fa-chevron-right"
+                              aria-hidden="true"></i>
+                        </a>
+                    {% else %}
+                        <span class="pagination-button disabled"
+                              aria-disabled="true">
+                            <span>Next</span>
+                            <i class="fa-solid fa-chevron-right"
+                              aria-hidden="true"></i>
+                        </span>
+                    {% endif %}
+
+                </nav>
+
+                <p class="pagination-count">
+                    {{ total_results }} articles found by the news API.
+                </p>
+            {% endif %}
+
         </section>
     </main>
+
+    <footer class="site-footer">
+        Article Hub · News sourced from NewsAPI and original publishers.
+    </footer>
 </body>
 </html>
