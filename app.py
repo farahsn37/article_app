@@ -1,4 +1,3 @@
-
 import logging
 import os
 from datetime import datetime, timezone
@@ -10,7 +9,6 @@ from flask import Flask, abort, render_template, request
 from newspaper import Article
 from newspaper.article import ArticleException
 from math import ceil
-
 
 # --------------------------------------------------
 # 1. Application configuration
@@ -27,7 +25,7 @@ logging.basicConfig(
 
 NEWSAPI_KEY = os.getenv("NEWSAPI_KEY", "").strip()
 NEWSAPI_COUNTRY = os.getenv("NEWSAPI_COUNTRY", "us").strip().lower()
-NEWSAPI_PAGE_SIZE =10
+NEWSAPI_PAGE_SIZE = 4
 MAX_PAGE = 100
 
 try:
@@ -426,6 +424,36 @@ def fetch_news(category="general", query="", page=1):
 # 4. Homepage
 # --------------------------------------------------
 
+@app.route("/")
+def index():
+    category = request.args.get("category", "general")
+    query = request.args.get("query", "").strip()
+
+    try:
+        page = max(1, min(int(request.args.get("page", 1)), MAX_PAGE))
+    except (TypeError, ValueError):
+        page = 1
+
+    articles, error, total_results = fetch_news(
+        category=category,
+        query=query,
+        page=page,
+    )
+
+    total_pages = min(
+        MAX_PAGE,
+        ceil(total_results / NEWSAPI_PAGE_SIZE),
+    )
+
+    return render_template(
+        "index.html",
+        articles=articles,
+        error=error,
+        category=category,
+        query=query,
+        page=page,
+        total_pages=total_pages,
+    )
 
 @app.route("/")
 def home():
