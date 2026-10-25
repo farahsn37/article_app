@@ -212,7 +212,7 @@ main.container {
     line-height: 1.7;
 
     display: -webkit-box;
-    -webkit-line-clamp: 4;
+    line-clamp: 4;
     -webkit-box-orient: vertical;
 
     overflow: hidden;
@@ -394,4 +394,401 @@ footer {
         transform: none;
     }
 
+}
+
+/* ========================================
+   LOADING INDICATOR
+======================================== */
+
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.loading-overlay p {
+    font-weight: 600;
+    color: #333;
+}
+
+
+/* ========================================
+   DARK MODE
+======================================== */
+
+body {
+    transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+body.dark-mode {
+    background-color: #121820;
+    color: #e8edf2;
+}
+
+.dark-mode .navbar {
+    background-color: #17212b !important;
+}
+
+.dark-mode .navbar-brand,
+.dark-mode .nav-link {
+    color: #f1f5f9 !important;
+}
+
+.dark-mode .card {
+    background-color: #1e2936;
+    color: #e8edf2;
+    border-color: #354252;
+}
+
+.dark-mode .card-title,
+.dark-mode .card-text,
+.dark-mode h1,
+.dark-mode h2,
+.dark-mode h3,
+.dark-mode p,
+.dark-mode label {
+    color: #e8edf2;
+}
+
+.dark-mode .form-control,
+.dark-mode .form-select {
+    background-color: #1e2936;
+    color: #f1f5f9;
+    border-color: #475569;
+}
+
+.dark-mode .form-control::placeholder {
+    color: #b5c0ce;
+}
+
+.dark-mode .loading-overlay {
+    background: rgba(18, 24, 32, 0.95);
+}
+
+.dark-mode .loading-overlay p {
+    color: #e8edf2;
+}
+
+.dark-mode .page-link {
+    background-color: #1e2936;
+    color: #e8edf2;
+    border-color: #475569;
+}
+
+.dark-mode .page-item.active .page-link {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.dark-mode footer {
+    background-color: #17212b;
+    color: #e8edf2;
+}
+
+
+/* ========================================
+   BOOKMARK BUTTON
+======================================== */
+
+.bookmark-button {
+    transition: all 0.2s ease;
+}
+
+.bookmark-button:hover {
+    transform: translateY(-2px);
+}
+
+#savedArticlesSection .card {
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+#savedArticlesSection .card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+
+/* ========================================
+   RESPONSIVE ADJUSTMENTS
+======================================== */
+
+@media (max-width: 576px) {
+    #darkModeToggle,
+    .navbar .btn {
+        font-size: 0.75rem;
+    }
+
+    .loading-overlay p {
+        font-size: 0.9rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body,
+    .bookmark-button {
+        transition: none;
+    }
+}
+
+/* ========================================
+   SAVED ARTICLES SIDEBAR
+======================================== */
+
+.saved-articles-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1040;
+
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(2px);
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease;
+}
+
+.saved-articles-backdrop.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+
+/* Sidebar container */
+
+.saved-articles-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 1050;
+
+    width: 420px;
+    max-width: 100%;
+    height: 100vh;
+    height: 100dvh;
+
+    background: #ffffff;
+    color: #212529;
+
+    box-shadow: -8px 0 30px rgba(0, 0, 0, 0.12);
+
+    display: flex;
+    flex-direction: column;
+
+    transform: translateX(105%);
+    transition: transform 0.3s ease;
+
+    overflow: hidden;
+}
+
+.saved-articles-sidebar.show {
+    transform: translateX(0);
+}
+
+
+/* Sidebar header */
+
+.saved-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 22px;
+    border-bottom: 1px solid #e9ecef;
+    flex-shrink: 0;
+}
+
+.saved-sidebar-header h4 {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+
+/* Sidebar scrollable content */
+
+.saved-sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.saved-articles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+
+/* Individual saved article */
+
+.saved-article-card {
+    display: flex;
+    flex-direction: column;
+
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+
+    overflow: hidden;
+    background: #ffffff;
+
+    transition:
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+.saved-article-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+
+/* Article image */
+
+.saved-article-image {
+    width: 100%;
+    height: 150px;
+
+    object-fit: cover;
+    background: #f1f3f5;
+}
+
+
+/* Article information */
+
+.saved-article-body {
+    padding: 16px;
+}
+
+.saved-article-title {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.5;
+
+    margin-bottom: 8px;
+}
+
+.saved-article-summary {
+    color: #6c757d;
+    font-size: 0.875rem;
+    line-height: 1.5;
+
+    margin-bottom: 14px;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+
+
+/* Article actions */
+
+.saved-article-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.saved-article-actions .btn {
+    font-size: 0.8rem;
+}
+
+
+/* Empty bookmarks state */
+
+.saved-articles-empty {
+    text-align: center;
+    padding: 50px 15px;
+    color: #6c757d;
+}
+
+.saved-articles-empty .empty-icon {
+    display: block;
+    font-size: 2.5rem;
+    margin-bottom: 14px;
+}
+
+.saved-articles-empty h5 {
+    color: #343a40;
+    font-weight: 700;
+}
+
+
+/* Prevent background scrolling when sidebar is open */
+
+body.saved-sidebar-open {
+    overflow: hidden;
+}
+
+
+/* Dark mode */
+
+body.dark-mode .saved-articles-sidebar {
+    background: #1e2936;
+    color: #e8edf2;
+}
+
+body.dark-mode .saved-sidebar-header {
+    border-bottom-color: #354252;
+}
+
+body.dark-mode .saved-articles-sidebar .text-muted {
+    color: #b5c0ce !important;
+}
+
+body.dark-mode .saved-article-card {
+    background: #263445;
+    border-color: #354252;
+}
+
+body.dark-mode .saved-article-summary {
+    color: #c1cad5;
+}
+
+body.dark-mode .saved-articles-empty h5 {
+    color: #e8edf2;
+}
+
+body.dark-mode .saved-sidebar-header .btn-close {
+    filter: invert(1);
+}
+
+
+/* Mobile adjustments */
+
+@media (max-width: 576px) {
+    .saved-articles-sidebar {
+        width: 100%;
+    }
+
+    .saved-sidebar-header {
+        padding: 18px;
+    }
+
+    .saved-sidebar-content {
+        padding: 14px;
+    }
+}
+
+
+/* Respect reduced-motion preferences */
+
+@media (prefers-reduced-motion: reduce) {
+    .saved-articles-sidebar,
+    .saved-articles-backdrop,
+    .saved-article-card {
+        transition: none;
+    }
 }
