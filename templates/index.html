@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>InfoStream Media News App</title>
 
@@ -21,73 +26,142 @@
 
 <body>
 
-    <!-- Navigation Bar -->
+    <!-- ==========================================
+         NAVIGATION BAR
+    =========================================== -->
+
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+
         <div class="container">
+
             <a class="navbar-brand fw-bold" href="/">
-                InfoStreamttt Media
+                InfoStream Media
             </a>
 
             <span class="navbar-text">
                 News App
             </span>
+
         </div>
+
     </nav>
+
+
+    <!-- ==========================================
+         MAIN CONTENT
+    =========================================== -->
 
     <main class="container py-5">
 
-        <!-- Application Title and Topic Badges -->
-        <section class="mb-5">
+        <!-- Application Title -->
+        <section class="page-header mb-5">
 
             <h1 class="fw-bold mb-2">
                 InfoStream Media News App
             </h1>
 
             <p class="text-muted mb-4">
-                Stay informed with the latest news from around the world.
+                Stay informed with the latest news from
+                around the world.
             </p>
 
-            <!-- Topic Badges: Visual Only -->
+
+            <!-- ======================================
+                 CLICKABLE TOPIC BADGES
+            ======================================= -->
+
+            <h2 class="h6 fw-bold mb-3">
+                Explore Topics
+            </h2>
+
             <div class="topic-badges d-flex flex-wrap gap-2">
 
-                <span class="badge rounded-pill text-bg-primary">
+                <a
+                    href="{{ url_for('index', topic='general', query=query) }}"
+                    class="badge rounded-pill text-bg-primary
+                           text-decoration-none topic-badge
+                           {% if topic == 'general' %}active-topic{% endif %}"
+                    {% if topic == 'general' %}aria-current="page"{% endif %}
+                >
                     General
-                </span>
+                </a>
 
-                <span class="badge rounded-pill text-bg-secondary">
+                <a
+                    href="{{ url_for('index', topic='business', query=query) }}"
+                    class="badge rounded-pill text-bg-secondary
+                           text-decoration-none topic-badge
+                           {% if topic == 'business' %}active-topic{% endif %}"
+                    {% if topic == 'business' %}aria-current="page"{% endif %}
+                >
                     Business
-                </span>
+                </a>
 
-                <span class="badge rounded-pill text-bg-success">
+                <a
+                    href="{{ url_for('index', topic='technology', query=query) }}"
+                    class="badge rounded-pill text-bg-success
+                           text-decoration-none topic-badge
+                           {% if topic == 'technology' %}active-topic{% endif %}"
+                    {% if topic == 'technology' %}aria-current="page"{% endif %}
+                >
                     Technology
-                </span>
+                </a>
 
-                <span class="badge rounded-pill text-bg-danger">
+                <a
+                    href="{{ url_for('index', topic='health', query=query) }}"
+                    class="badge rounded-pill text-bg-danger
+                           text-decoration-none topic-badge
+                           {% if topic == 'health' %}active-topic{% endif %}"
+                    {% if topic == 'health' %}aria-current="page"{% endif %}
+                >
                     Health
-                </span>
+                </a>
 
-                <span class="badge rounded-pill text-bg-warning">
+                <a
+                    href="{{ url_for('index', topic='entertainment', query=query) }}"
+                    class="badge rounded-pill text-bg-warning
+                           text-decoration-none topic-badge
+                           {% if topic == 'entertainment' %}active-topic{% endif %}"
+                    {% if topic == 'entertainment' %}aria-current="page"{% endif %}
+                >
                     Entertainment
-                </span>
+                </a>
 
-                <span class="badge rounded-pill text-bg-info">
+                <a
+                    href="{{ url_for('index', topic='science', query=query) }}"
+                    class="badge rounded-pill text-bg-info
+                           text-decoration-none topic-badge
+                           {% if topic == 'science' %}active-topic{% endif %}"
+                    {% if topic == 'science' %}aria-current="page"{% endif %}
+                >
                     Science
-                </span>
+                </a>
 
-                <span class="badge rounded-pill text-bg-dark">
+                <a
+                    href="{{ url_for('index', topic='sports', query=query) }}"
+                    class="badge rounded-pill text-bg-dark
+                           text-decoration-none topic-badge
+                           {% if topic == 'sports' %}active-topic{% endif %}"
+                    {% if topic == 'sports' %}aria-current="page"{% endif %}
+                >
                     Sports
-                </span>
+                </a>
 
             </div>
 
         </section>
 
-        <!-- Search and Category Filters -->
+
+        <!-- ==========================================
+             SEARCH AND CATEGORY FILTER
+        =========================================== -->
+
         <section class="filter-container mb-5">
 
             <form method="GET" action="/" class="row g-3">
 
+                <!-- Search Input -->
                 <div class="col-12 col-md-6">
+
                     <label for="query" class="form-label">
                         Search Articles
                     </label>
@@ -98,20 +172,25 @@
                         name="query"
                         class="form-control"
                         placeholder="Enter a keyword..."
-                        value="{{ query | default('') }}"
+                        value="{{ query }}"
                     >
+
                 </div>
 
+
+                <!-- Topic Dropdown -->
                 <div class="col-12 col-md-4">
-                    <label for="category" class="form-label">
+
+                    <label for="topic" class="form-label">
                         Category
                     </label>
 
                     <select
-                        id="category"
-                        name="category"
+                        id="topic"
+                        name="topic"
                         class="form-select"
                     >
+
                         {% for cat in [
                             'general',
                             'business',
@@ -121,57 +200,94 @@
                             'sports',
                             'technology'
                         ] %}
+
                             <option
                                 value="{{ cat }}"
-                                {% if category | default('general') == cat %}
-                                    selected
-                                {% endif %}
+                                {% if topic == cat %}selected{% endif %}
                             >
                                 {{ cat | title }}
                             </option>
+
                         {% endfor %}
+
                     </select>
+
                 </div>
 
+
+                <!-- Search Button -->
                 <div class="col-12 col-md-2 d-flex align-items-end">
+
                     <button
                         type="submit"
                         class="btn btn-primary w-100"
                     >
                         Search
                     </button>
+
                 </div>
 
             </form>
 
         </section>
 
-        <!-- Error Message -->
+
+        <!-- ==========================================
+             ERROR MESSAGE
+        =========================================== -->
+
         {% if error %}
+
             <div class="alert alert-warning" role="alert">
+
+                <strong>Notice:</strong>
                 {{ error }}
+
             </div>
+
         {% endif %}
 
-        <!-- Main Articles Container -->
+
+        <!-- ==========================================
+             ARTICLES SECTION
+        =========================================== -->
+
         <section class="articles-container">
 
-            <div class="d-flex justify-content-between
-                        align-items-center mb-4">
+            <!-- Section Heading -->
+            <div
+                class="d-flex justify-content-between
+                       align-items-center mb-4"
+            >
 
-                <h2 class="h4 fw-bold mb-0">
-                    Latest Articles
-                </h2>
+                <div>
+
+                    <h2 class="h4 fw-bold mb-1">
+                        Latest Articles
+                    </h2>
+
+                    <p class="text-muted small mb-0">
+                        Topic: {{ topic | title }}
+                    </p>
+
+                </div>
 
                 <span class="text-muted small">
-                    Page {{ page | default(1) }}
+                    Page {{ page }}
+                    {% if total_pages > 0 %}
+                        of {{ total_pages }}
+                    {% endif %}
                 </span>
 
             </div>
 
+
+            <!-- ======================================
+                 ARTICLE CARDS
+            ======================================= -->
+
             {% if articles %}
 
-                <!-- Two Columns on Medium and Larger Screens -->
                 <div class="row row-cols-1 row-cols-md-2 g-4">
 
                     {% for article in articles %}
@@ -180,6 +296,7 @@
 
                             <article class="card article-card h-100">
 
+                                <!-- Article Image -->
                                 {% if article.image %}
 
                                     <img
@@ -192,9 +309,11 @@
 
                                 {% else %}
 
-                                    <div class="article-image-placeholder
-                                                d-flex align-items-center
-                                                justify-content-center">
+                                    <div
+                                        class="article-image-placeholder
+                                               d-flex align-items-center
+                                               justify-content-center"
+                                    >
 
                                         <span class="text-muted">
                                             No image available
@@ -204,33 +323,66 @@
 
                                 {% endif %}
 
+
+                                <!-- Article Content -->
                                 <div class="card-body d-flex flex-column">
 
+                                    <!-- Category Badge -->
                                     <div class="mb-2">
+
                                         <span class="badge text-bg-primary">
                                             {{ article.category }}
                                         </span>
+
                                     </div>
 
+
+                                    <!-- Article Title -->
                                     <h3 class="card-title h5 fw-bold">
+
                                         {{ article.title }}
+
                                     </h3>
 
+
+                                    <!-- Article Summary -->
                                     <p class="card-text text-muted article-summary">
+
                                         {{ article.summary }}
+
                                     </p>
 
+
+                                    <!-- Article Metadata -->
                                     <div class="article-meta mt-auto">
 
                                         <p class="small text-muted mb-3">
-                                            Source: {{ article.source }}
+
+                                            <strong>Source:</strong>
+                                            {{ article.source }}
+
                                             <br>
-                                            Author: {{ article.author }}
+
+                                            <strong>Author:</strong>
+                                            {{ article.author }}
+
+                                            {% if article.published_at %}
+
+                                                <br>
+
+                                                <strong>Published:</strong>
+                                                {{ article.published_at }}
+
+                                            {% endif %}
+
                                         </p>
 
+
+                                        <!-- Read Article Button -->
                                         <a
                                             href="{{ article.url }}"
-                                            class="btn btn-outline-primary read-more-btn"
+                                            class="btn btn-outline-primary
+                                                   read-more-btn"
                                             target="_blank"
                                             rel="noopener noreferrer"
                                         >
@@ -250,17 +402,27 @@
 
                 </div>
 
+
             {% else %}
 
+                <!-- No Articles Message -->
                 <div class="empty-state text-center py-5">
 
                     <h3 class="h5">
                         No articles available
                     </h3>
 
-                    <p class="text-muted mb-0">
-                        Try another category or search keyword.
+                    <p class="text-muted mb-3">
+                        We could not find any articles for this topic
+                        or search keyword.
                     </p>
+
+                    <a
+                        href="{{ url_for('index', topic='general') }}"
+                        class="btn btn-primary"
+                    >
+                        Return to General News
+                    </a>
 
                 </div>
 
@@ -268,43 +430,68 @@
 
         </section>
 
-        <!-- Pagination -->
-        {% if total_pages | default(1) > 1 %}
+
+        <!-- ==========================================
+             PAGINATION
+        =========================================== -->
+
+        {% if total_pages > 1 %}
 
             <nav class="mt-5" aria-label="Article pagination">
 
                 <ul class="pagination justify-content-center">
 
-                    <li class="page-item
-                        {% if page <= 1 %}disabled{% endif %}">
 
-                        <a
-                            class="page-link"
-                            href="{{ url_for(
-                                'index',
-                                page=page - 1,
-                                category=category,
-                                query=query
-                            ) }}"
-                        >
-                            Previous
-                        </a>
+                    <!-- Previous Button -->
+                    <li
+                        class="page-item
+                               {% if page <= 1 %}disabled{% endif %}"
+                    >
+
+                        {% if page > 1 %}
+
+                            <a
+                                class="page-link"
+                                href="{{ url_for(
+                                    'index',
+                                    page=page - 1,
+                                    topic=topic,
+                                    query=query
+                                ) }}"
+                            >
+                                Previous
+                            </a>
+
+                        {% else %}
+
+                            <span class="page-link">
+                                Previous
+                            </span>
+
+                        {% endif %}
 
                     </li>
 
+
+                    <!-- Page Numbers -->
                     {% for page_number in range(1, total_pages + 1) %}
 
-                        <li class="page-item
-                            {% if page_number == page %}active{% endif %}">
+                        <li
+                            class="page-item
+                                   {% if page_number == page %}active{% endif %}"
+                        >
 
                             <a
                                 class="page-link"
                                 href="{{ url_for(
                                     'index',
                                     page=page_number,
-                                    category=category,
+                                    topic=topic,
                                     query=query
                                 ) }}"
+                                {% if page_number == page %}
+                                    aria-current="page"
+                                {% endif %}
                             >
                                 {{ page_number }}
                             </a>
@@ -313,20 +500,34 @@
 
                     {% endfor %}
 
-                    <li class="page-item
-                        {% if page >= total_pages %}disabled{% endif %}">
 
-                        <a
-                            class="page-link"
-                            href="{{ url_for(
-                                'index',
-                                page=page + 1,
-                                category=category,
-                                query=query
-                            ) }}"
-                        >
-                            Next
-                        </a>
+                    <!-- Next Button -->
+                    <li
+                        class="page-item
+                               {% if page >= total_pages %}disabled{% endif %}"
+                    >
+
+                        {% if page < total_pages %}
+
+                            <a
+                                class="page-link"
+                                href="{{ url_for(
+                                    'index',
+                                    page=page + 1,
+                                    topic=topic,
+                                    query=query
+                                ) }}"
+                            >
+                                Next
+                            </a>
+
+                        {% else %}
+
+                            <span class="page-link">
+                                Next
+                            </span>
+
+                        {% endif %}
 
                     </li>
 
@@ -338,7 +539,11 @@
 
     </main>
 
-    <!-- Footer -->
+
+    <!-- ==========================================
+         FOOTER
+    =========================================== -->
+
     <footer class="bg-dark text-white text-center py-3 mt-5">
 
         <p class="mb-0 small">
@@ -347,10 +552,12 @@
 
     </footer>
 
+
     <!-- Bootstrap JavaScript -->
     <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
-    </script>
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    ></script>
 
 </body>
+
 </html>
