@@ -1,6 +1,6 @@
 import logging
+import math
 import os
-from math import ceil
 from urllib.parse import urlparse
 
 import requests
@@ -8,31 +8,36 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, request
 from newspaper import Article
 
-# --------------------------------------------------
-# INITIAL CONFIGURATION
-# --------------------------------------------------
+# ==========================================================
+# CONFIGURATION
+# ==========================================================
 
 load_dotenv()
 
 app = Flask(__name__)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(message)s",
-)
-
-NEWSAPI_KEY = os.getenv("NEWSAPI_KEY", "").strip()
-NEWSAPI_COUNTRY = os.getenv("NEWSAPI_COUNTRY", "us").strip().lower()
+# Configure logging so we can see how many articles
+# NewsAPI returns in the terminal.
+logging.basicConfig(level=logging.INFO)
 
 NEWSAPI_URL = "https://newsapi.org/v2/top-headlines"
 
-# Display four articles per page
+# Number of articles requested per page.
 NEWSAPI_PAGE_SIZE = 4
 
-# Maximum page number allowed
+# NewsAPI allows a maximum of 100 results per request.
 MAX_PAGE = 100
 
-# Supported NewsAPI categories
+# Read the API key from the .env file.
+NEWSAPI_KEY = (
+    os.getenv("NEWSAPI_KEY")
+    or os.getenv("NEWS_API_KEY")
+)
+
+# Country code, for example: us, gb, au.
+NEWSAPI_COUNTRY = os.getenv("NEWSAPI_COUNTRY", "us").lower()
+
+# Supported news categories.
 ALLOWED_CATEGORIES = {
     "general",
     "business",
@@ -44,28 +49,18 @@ ALLOWED_CATEGORIES = {
 }
 
 
-# --------------------------------------------------
-# HELPER FUNCTIONS
-# --------------------------------------------------
-
-def truncate_text(text, max_length=200):
-    """Shorten text to a specified length."""
-
-    if not text:
-        return ""
-
-    text = " ".join(str(text).split())
-
-    if len(text) <= max_length:
-        return text
-
-    return text[:max_length].rsplit(" ", 1)[0] + "..."
-
+# ==========================================================
+# URL VALIDATION
+# ==========================================================
 
 def valid_http_url(url):
-    """Check whether a URL uses HTTP or HTTPS."""
+    """
+    Check whether a URL is a valid HTTP or HTTPS URL.
 
-    if not url:
+    Returns True for valid web URLs and False otherwise.
+    """
+
+    if not url or not isinstance(url, str):
         return False
 
     try:
@@ -76,287 +71,403 @@ def valid_http_url(url):
             and bool(parsed_url.netloc)
         )
 
-    except (ValueError, TypeError):
+    except (TypeError, ValueError):
         return False
 
 
-def safe_image_url(url):
-    """Return an image URL only if it is a valid HTTP(S) URL."""
+# ==========================================================
+# ARTICLE EXTRACTION
+# ==========================================================
 
-    if valid_http_url(url):
-        return url
-
-    return None
-
-
-def extract_article_content(url):
+def extract_article_details(url):
     """
-    Attempt to extract an article's title, text, author,
-    and top image using Newspaper3k.
+    Attempt to extract additional article details using
+    Newspaper3k.
+
+    If extraction fails, return an empty dictionary.
+    The article itself will still be displayed using
+    the information supplied by NewsAPI.
     """
 
     if not valid_http_url(url):
-        return {
-            "title": "",
-            "text": "",
-            "author": "",
-            "image": None,
-        }
+        return {}
 
     try:
         article = Article(url)
+
         article.download()
         article.parse()
 
-        return {
-            "title": article.title or "",
-            "text": article.text or "",
-            "author": ", ".join(article.authors)
-            if article.authors
-            else "",
-            "image": safe_image_url(article.top_image),
-        }
+        details = {}
 
-    except Exception as exc:
+        if article.title:
+            details["title"] = article.title.strip()
+
+        if article.text:
+            details["text"] = article.text.strip()
+
+        if article.summary:
+            details["summary"] = article.summary.strip()
+
+        if article.authors:
+            details["author"] = ", ".join(article.authors)
+
+        if article.top_image:
+            details["image"] = article.top_image
+
+        return details
+
+    except Exception as error:
         logging.warning(
-            "Could not extract article content from %s: %s",
-            url,
-            exc,
+            "Newspaper3k could not extract article details: %s",
+            error,
         )
 
-        return {
-            "title": "",
-            "text": "",
-            "author": "",
-            "image": None,
-        }
+        return {}
 
 
-# --------------------------------------------------
-# FETCH ARTICLES FROM NEWSAPI
-# --------------------------------------------------
+# ==========================================================
+# FETCH NEWS FROM NEWSAPI
+# ==========================================================
 
 def fetch_news(topic="general", query="", page=1):
     """
-    Fetch articles from NewsAPI based on topic, keyword,
-    and page number.
+    Retrieve news articles from NewsAPI.
 
     Returns:
-        displayed_articles: list of article dictionaries
-        error: error message or None
-        total_results: total results reported by NewsAPI
+        displayed_articles: List of article dictionaries.
+        error: Error message or None.
+        total_results: Total number of results reported by NewsAPI.
     """
 
     displayed_articles = []
+    error = None
+    total_results = 0
 
-    # Ensure the selected topic is supported
+    # ------------------------------------------------------
+    # 1. Check API key
+    # ------------------------------------------------------
+
+    if not NEWSAPI_KEY:
+        error = (
+            "NewsAPI key is missing. "
+            "Please configure NEWSAPI_KEY in your .env file."
+        )
+
+        logging.error(error)
+
+        return displayed_articles, error, total_results
+
+    # ------------------------------------------------------
+    # 2. Validate category
+    # ------------------------------------------------------
+
+    topic = (topic or "general").strip().lower()
+
     if topic not in ALLOWED_CATEGORIES:
         topic = "general"
 
-    # Ensure the page number is valid
+    # ------------------------------------------------------
+    # 3. Validate page number
+    # ------------------------------------------------------
+
+    try:
+        page = int(page)
+    except (TypeError, ValueError):
+        page = 1
+
     page = max(1, min(page, MAX_PAGE))
 
-    # Ensure the keyword is a string
-    query = query.strip() if query else ""
+    # ------------------------------------------------------
+    # 4. Prepare NewsAPI request parameters
+    # ------------------------------------------------------
 
-    # Check whether the API key is configured
-    if not NEWSAPI_KEY:
-        return (
-            [],
-            "NewsAPI key is missing. Please configure NEWSAPI_KEY in your .env file.",
-            0,
-        )
-
-    # NewsAPI request parameters
     params = {
         "country": NEWSAPI_COUNTRY,
         "category": topic,
         "page": page,
         "pageSize": NEWSAPI_PAGE_SIZE,
+        "apiKey": NEWSAPI_KEY,
     }
 
-    # Add keyword search if the user entered one
+    # Add the search keyword if the user entered one.
     if query:
-        params["q"] = query
+        params["q"] = query.strip()
 
-    headers = {
-        "X-Api-Key": NEWSAPI_KEY,
-    }
+    # ------------------------------------------------------
+    # 5. Send request to NewsAPI
+    # ------------------------------------------------------
 
     try:
         response = requests.get(
             NEWSAPI_URL,
-            headers=headers,
             params=params,
             timeout=15,
         )
 
+        # Raise an exception if the HTTP request failed.
         response.raise_for_status()
 
         data = response.json()
 
-        # Check NewsAPI response status
+        # NewsAPI can return an error in its JSON response.
         if data.get("status") != "ok":
-            message = data.get(
+            error = data.get(
                 "message",
-                "Unable to retrieve articles from NewsAPI.",
+                "NewsAPI could not retrieve the articles.",
             )
 
-            return [], message, 0
+            logging.error("NewsAPI error: %s", error)
 
-        # Total number of results reported by NewsAPI
-        total_results = data.get("totalResults", 0)
+            return displayed_articles, error, total_results
 
-        articles = data.get("articles", [])
+        # --------------------------------------------------
+        # 6. Retrieve articles from the API response
+        # --------------------------------------------------
 
-        # Process each article
+        articles = data.get("articles", []) or []
+
+        total_results = data.get("totalResults", 0) or 0
+
+        logging.info(
+            "NewsAPI returned %d articles. "
+            "Requested page size: %d. "
+            "Page: %d. Topic: %s.",
+            len(articles),
+            NEWSAPI_PAGE_SIZE,
+            page,
+            topic,
+        )
+
+        # --------------------------------------------------
+        # 7. Process each article
+        # --------------------------------------------------
+
         for item in articles:
 
-            url = item.get("url")
-
-            # Skip articles without a valid URL
-            if not valid_http_url(url):
+            # Ignore malformed entries, but do not discard
+            # articles simply because their URLs are missing.
+            if not isinstance(item, dict):
                 continue
 
-            source_info = item.get("source") or {}
+            # Get the article URL.
+            original_url = item.get("url") or ""
 
-            source_name = source_info.get("name") or "Unknown Source"
-
-            published_at = item.get("publishedAt") or ""
-
-            api_title = item.get("title") or "Untitled Article"
-
-            description = item.get("description") or ""
-
-            api_content = item.get("content") or ""
-
-            api_author = item.get("author") or ""
-
-            api_image = safe_image_url(item.get("urlToImage"))
-
-            # Attempt to extract the article content
-            extracted = extract_article_content(url)
-
-            title = extracted["title"] or api_title
-
-            content = (
-                extracted["text"]
-                or api_content
-                or description
+            # Keep only valid URLs for clickable article links.
+            # IMPORTANT: Do not skip the article if the URL
+            # is invalid. The card can still be displayed.
+            safe_url = (
+                original_url
+                if valid_http_url(original_url)
+                else ""
             )
 
-            author = extracted["author"] or api_author or "Unknown"
+            # --------------------------------------------------
+            # Get basic information from NewsAPI
+            # --------------------------------------------------
 
-            image_url = extracted["image"] or api_image
+            source_information = item.get("source") or {}
 
-            # Prepare the article for the frontend
+            if not isinstance(source_information, dict):
+                source_information = {}
+
+            title = (
+                item.get("title")
+                or "Title unavailable"
+            )
+
+            description = (
+                item.get("description")
+                or ""
+            )
+
+            api_content = (
+                item.get("content")
+                or ""
+            )
+
+            author = item.get("author") or "Unknown"
+
+            image = item.get("urlToImage") or ""
+
+            published_at = (
+                item.get("publishedAt")
+                or ""
+            )
+
+            source = (
+                source_information.get("name")
+                or "Unknown source"
+            )
+
+            # --------------------------------------------------
+            # Prepare fallback summary
+            # --------------------------------------------------
+
+            summary = description or api_content
+
+            # Remove NewsAPI's common truncation marker.
+            if summary:
+                summary = summary.replace("[+chars]", "").strip()
+
+            # --------------------------------------------------
+            # Attempt Newspaper3k extraction
+            # --------------------------------------------------
+
+            # Only attempt to download the article when its
+            # URL is valid. Extraction failure must not remove
+            # the original NewsAPI article from the results.
+            extracted = extract_article_details(safe_url)
+
+            # Prefer extracted information when available.
+            # Otherwise, retain the NewsAPI information.
+            title = extracted.get("title") or title
+
+            summary = (
+                extracted.get("summary")
+                or summary
+                or "No summary is available for this article."
+            )
+
+            author = extracted.get("author") or author
+
+            image = extracted.get("image") or image
+
+            # --------------------------------------------------
+            # Build article dictionary for the HTML template
+            # --------------------------------------------------
+
             article_data = {
-                "id": len(displayed_articles) + 1,
                 "title": title,
-                "category": topic.title(),
+                "summary": summary,
+                "url": safe_url,
+                "image": image,
+                "source": source,
                 "author": author,
-                "summary": truncate_text(
-                    description or content,
-                    180,
-                ),
-                "image": image_url,
-                "content": truncate_text(content, 600),
-                "preview": truncate_text(content, 220),
-                "url": url,
-                "source": source_name,
                 "published_at": published_at,
+                "category": topic.title(),
             }
 
+            # Add this article even if it has no valid URL.
             displayed_articles.append(article_data)
 
-        return displayed_articles, None, total_results
+        # --------------------------------------------------
+        # 8. Log the final article count
+        # --------------------------------------------------
 
-    except requests.exceptions.HTTPError as exc:
-        logging.error("NewsAPI HTTP error: %s", exc)
-
-        try:
-            error_data = response.json()
-            error_message = error_data.get(
-                "message",
-                "NewsAPI returned an HTTP error.",
-            )
-        except ValueError:
-            error_message = "NewsAPI returned an HTTP error."
-
-        return [], error_message, 0
+        logging.info(
+            "Prepared %d article cards for page %d.",
+            len(displayed_articles),
+            page,
+        )
 
     except requests.exceptions.Timeout:
-        logging.error("NewsAPI request timed out.")
-
-        return (
-            [],
-            "The request to NewsAPI timed out. Please try again.",
-            0,
+        error = (
+            "The request to NewsAPI timed out. "
+            "Please try again later."
         )
 
-    except requests.exceptions.RequestException as exc:
-        logging.error("NewsAPI request failed: %s", exc)
+        logging.exception("NewsAPI request timed out.")
 
-        return (
-            [],
-            "Unable to connect to NewsAPI. Please try again later.",
-            0,
+    except requests.exceptions.HTTPError as exception:
+        error = (
+            "NewsAPI returned an HTTP error. "
+            "Please check your API key and API usage limits."
         )
 
-    except (ValueError, TypeError) as exc:
-        logging.error("Invalid NewsAPI response: %s", exc)
-
-        return (
-            [],
-            "The response from NewsAPI could not be processed.",
-            0,
+        logging.exception(
+            "NewsAPI HTTP error: %s",
+            exception,
         )
 
+    except requests.exceptions.RequestException as exception:
+        error = (
+            "Unable to connect to NewsAPI. "
+            "Please check your internet connection."
+        )
 
-# --------------------------------------------------
-# HOME PAGE: TOPIC FILTERING AND PAGINATION
-# --------------------------------------------------
+        logging.exception(
+            "NewsAPI connection error: %s",
+            exception,
+        )
 
-@app.route("/")
+    except ValueError as exception:
+        error = (
+            "NewsAPI returned an invalid response. "
+            "Please try again."
+        )
+
+        logging.exception(
+            "Could not decode NewsAPI response: %s",
+            exception,
+        )
+
+    except Exception as exception:
+        error = (
+            "An unexpected error occurred while retrieving news."
+        )
+
+        logging.exception(
+            "Unexpected error in fetch_news(): %s",
+            exception,
+        )
+
+    return displayed_articles, error, total_results
+
+
+# ==========================================================
+# MAIN ROUTE
+# ==========================================================
+
+@app.route("/", methods=["GET"])
 def index():
+    """
+    Display the news homepage.
 
-    # Read the selected topic from the URL
-    topic = request.args.get(
-        "topic",
-        "general",
-    ).strip().lower()
+    Supports:
+        - Category filtering
+        - Keyword search
+        - Pagination
+        - Error messages
+    """
 
-    # Read the search keyword
-    query = request.args.get(
-        "query",
-        "",
-    ).strip()
+    # Get search parameters from the URL.
+    topic = request.args.get("topic", "general")
 
-    # Validate the topic
+    query = request.args.get("query", "").strip()
+
+    page = request.args.get("page", 1, type=int)
+
+    # Handle an invalid page number.
+    if page is None or page < 1:
+        page = 1
+
+    page = min(page, MAX_PAGE)
+
+    # Validate the requested category.
+    topic = (topic or "general").strip().lower()
+
     if topic not in ALLOWED_CATEGORIES:
         topic = "general"
 
-    # Read and validate the requested page
-    try:
-        page = int(request.args.get("page", 1))
-    except (ValueError, TypeError):
-        page = 1
-
-    page = max(1, min(page, MAX_PAGE))
-
-    # Fetch articles using the selected topic and page
+    # Retrieve articles.
     articles, error, total_results = fetch_news(
         topic=topic,
         query=query,
         page=page,
     )
 
-    # Calculate the total pages from NewsAPI's result count
-    total_pages = min(
-        MAX_PAGE,
-        ceil(total_results / NEWSAPI_PAGE_SIZE),
-    )
+    # Calculate the number of pages using NewsAPI's
+    # reported total results.
+    if total_results > 0:
+        total_pages = min(
+            MAX_PAGE,
+            math.ceil(total_results / NEWSAPI_PAGE_SIZE),
+        )
+    else:
+        total_pages = 0
 
+    # Render the homepage.
     return render_template(
         "index.html",
         articles=articles,
@@ -368,9 +479,13 @@ def index():
     )
 
 
-# --------------------------------------------------
-# RUN FLASK APPLICATION
-# --------------------------------------------------
+# ==========================================================
+# RUN APPLICATION
+# ==========================================================
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(
+        host="127.0.0.1",
+        port=5000,
+        debug=False
+    )
